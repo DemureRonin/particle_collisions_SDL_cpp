@@ -28,6 +28,7 @@ public:
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         for (auto &particle : particles)
         {
+            SDL_SetRenderDrawColor(renderer, particle.color.r, particle.color.g, particle.color.b, 255);
             SDL_RenderFillCircle(renderer, particle.position.x, particle.position.y,
                                  particle.radius);
         }
@@ -35,6 +36,5 @@ public:
         SDL_RenderPresent(renderer);
     }
 
-   
     void clear() {}
 };

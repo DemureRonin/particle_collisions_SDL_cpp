@@ -2,52 +2,46 @@
 
 #include "screen.h"
 void add_particle(std::vector<Particle> &vector, vec2 coords, float radius);
-void handle_input(SDL_Event e, std::vector<Particle> &vector, float radius);
-int main()
+void handle_input(SDL_Event e, std::vector<Particle> &vector, float radius, float &clickCount, bool &colorAscending);
+int main(int argc, char **argv)
 {
     Screen screen;
     bool running = true;
-    const float defaultRadius = 3;
+    const float defaultRadius = 5;
     std::vector<Particle> particles;
-
-    add_particle(particles, vec2(500, 500), defaultRadius);
-
     Uint32 previousTime = SDL_GetTicks();
     float deltaTime = 0;
-
+    float clickCount = 0;
+    bool colorAscending = true;
     while (running)
     {
-        screen.render(particles);
-        for (auto &particle1 : particles)
+        handle_input(screen.e, particles, defaultRadius, clickCount, colorAscending);
+
+        for (auto &p1 : particles)
         {
-             particle1.simulate(deltaTime, true, vec2(1, 1));
-            // for (auto &particle2 : particles)
-            // {
-            //     if (particle1 != particle2)
-            //     {
-            //         //      if(distance)
-            //     }
-               
-            // }
+            int screenWidth, screenHeight;
+            SDL_GetWindowSize(screen.window, &screenWidth, &screenHeight);
+            p1.simulate(deltaTime);
+            p1.handleBoundsCollisions(screenWidth, screenHeight);
+            p1.handleParticleCollisions(particles);
         }
+        screen.render(particles);
 
         Uint32 currentTime = SDL_GetTicks();
         deltaTime = (currentTime - previousTime) / 1000.0f;
         previousTime = currentTime;
 
-        handle_input(screen.e, particles, defaultRadius);
         SDL_Delay(16);
     }
     return 0;
 }
-void add_particle(std::vector<Particle> &vector, vec2 coords, float radius)
+void add_particle(std::vector<Particle> &vector, vec2 coords, float radius, float hue)
 {
-    std::unique_ptr<Particle> particle =
-        std::make_unique<Particle>(coords, radius);
-    vector.push_back(*particle);
+    vector.emplace_back(coords, radius, hue);
+
     std::cout << vector.size() << std::endl;
 }
-void handle_input(SDL_Event e, std::vector<Particle> &vector, float radius)
+void handle_input(SDL_Event e, std::vector<Particle> &vector, float radius, float &clickCount, bool &colorAscending)
 {
     while (SDL_PollEvent(&e))
     {
@@ -61,7 +55,17 @@ void handle_input(SDL_Event e, std::vector<Particle> &vector, float radius)
             if (e.button.button == SDL_BUTTON_LEFT)
             {
                 std::cout << "Left mouse button pressed at: (" << e.button.x << ", " << e.button.y << ")" << std::endl;
-                add_particle(vector, vec2(e.button.x, e.button.y), radius);
+                add_particle(vector, vec2(e.button.x, e.button.y), radius, clickCount);
+                float increment = 10;
+                if (clickCount > 360)
+                {
+                    colorAscending = false;
+                }
+                else if (clickCount < 0)
+                {
+                    colorAscending = true;
+                }
+                clickCount = colorAscending ? clickCount + increment : clickCount - increment;
             }
             else if (e.button.button == SDL_BUTTON_RIGHT)
             {

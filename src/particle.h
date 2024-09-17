@@ -6,38 +6,65 @@
 class Particle
 {
 public:
-    Particle(vec2 coord, float radius) : position(coord), radius(radius) {}
-
-    float radius;
-    float mass = 1;
+    Particle(vec2 coord, float radius, float hue) : position(coord), radius(radius), hue(hue) {}
     const vec2 gravity = vec2(0, 9.81);
     vec2 position = vec2(0, 0);
-    vec2 velocity = vec2(0, 0);
-    bool freeFalling;
-    float groundY = 700;
-    float restitution = 0.7f;
-    float simulationSpeed = 1;
+    vec2 velocity = vec2(10, 10);
+    float radius;
+    float mass = 1;
+    float restitution = .6f;
+    float simulationSpeed = 30;
 
-    void simulate(float deltaTime, bool collided, vec2 bounceVector)
+    float hue;
+    Color color = color.fromHSL(hue, 100, 100);
+
+    void simulate(float deltaTime)
     {
-        vec2 totalForce = gravity * mass;
-        vec2 acceleration = totalForce * (1.0f / mass);
-        velocity += acceleration * deltaTime * simulationSpeed;
-        position += velocity;
-        handleBounce();
-        if (collided)
-        {
-            //   velocity = bounceVector * restitution;
-        }
-        
+        vec2 acceleration = gravity * mass;
+        velocity = velocity + acceleration * deltaTime;
+        position = position + velocity * deltaTime * simulationSpeed;
     }
-    void handleBounce()
+    void handleParticleCollisions(std::vector<Particle> &particles)
     {
-        if (position.y > groundY)
+        for (auto &p2 : particles)
         {
-            // Reverse the velocity in the Y direction and apply restitution (energy loss)
+            float minDistance = p2.radius + this->radius;
+            float distance = this->position.distanceTo(p2.position);
+            if (&p2 != this && distance < minDistance)
+            {
+                vec2 normal = (p2.position - this->position).normalize();
+                vec2 relativeVelocity = p2.velocity - this->velocity;
+                vec2 impulse = normal * (2 * relativeVelocity.dot(normal) / 2);
+                this->velocity += impulse * restitution;
+                p2.velocity -= impulse * p2.restitution;
+
+                vec2 repulsion = normal * (minDistance - distance);
+                this->position -= repulsion;
+                p2.position += repulsion;
+            }
+        }
+    }
+    void handleBoundsCollisions(int screenWidth, int screenHeight)
+    {
+        if (position.y + radius >= screenHeight)
+        {
+            position.y = screenHeight - radius;
             velocity.y = -velocity.y * restitution;
-            position.y = groundY; // Keep at the surface level
+        }
+        if (position.y - radius <= 0)
+        {
+            position.y = 0 + radius;
+            velocity.y = -velocity.y * restitution;
+        }
+        if (position.x - radius <= 0)
+        {
+            velocity.x = -velocity.x * restitution;
+            position.x = 0 + radius;
+        }
+        if (position.x + radius >= screenWidth)
+        {
+            velocity.x = -velocity.x * restitution;
+            position.x = screenWidth - radius;
         }
     }
     bool operator==(const Particle &other) const
@@ -45,7 +72,6 @@ public:
         return (position.x == other.position.x) && (position.y == other.position.y);
     }
 
-    // Define the != operator using the == operator
     bool operator!=(const Particle &other) const
     {
         return !(*this == other);
