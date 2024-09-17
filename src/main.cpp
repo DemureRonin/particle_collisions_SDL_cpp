@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "screen.h"
-void add_particle(std::vector<Particle> &vector, vec2 coords, float radius);
+void add_particle(std::vector<Particle> &vector, vec2 coords, float radius, float hue);
 void handle_input(SDL_Event e, std::vector<Particle> &vector, float radius, float &clickCount, bool &colorAscending);
 int main(int argc, char **argv)
 {
