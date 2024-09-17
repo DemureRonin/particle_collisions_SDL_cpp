@@ -54,15 +54,14 @@ struct vec2
         return x * other.x + y * other.y;
     }
 };
-struct Color
+struct color
 {
     uint8_t r, g, b, a;
 
-    Color(uint8_t red = 255, uint8_t green = 255, uint8_t blue = 255, uint8_t alpha = 255)
+    color(uint8_t red = 255, uint8_t green = 255, uint8_t blue = 255, uint8_t alpha = 255)
         : r(red), g(green), b(blue), a(alpha) {}
 
-    // Convert HSL to RGB and return a Color object
-    static Color fromHSL(float hue, float saturation, float lightness)
+    static color from_HSL(float hue, float saturation, float lightness)
     {
         float c = (1.0f - std::fabs(2.0f * lightness - 1.0f)) * saturation;
         float x = c * (1.0f - std::fabs(std::fmod(hue / 60.0f, 2) - 1.0f));
@@ -106,11 +105,10 @@ struct Color
             bPrime = x;
         }
 
-        // Convert from [0, 1] range to [0, 255] for RGB
         uint8_t r = static_cast<uint8_t>((rPrime + m) * 255.0f);
         uint8_t g = static_cast<uint8_t>((gPrime + m) * 255.0f);
         uint8_t b = static_cast<uint8_t>((bPrime + m) * 255.0f);
 
-        return Color(r, g, b);
+        return color(r, g, b);
     }
 };

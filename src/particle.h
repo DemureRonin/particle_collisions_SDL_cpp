@@ -16,7 +16,7 @@ public:
     float simulationSpeed = 30;
 
     float hue;
-    Color color = color.fromHSL(hue, 100, 100);
+    struct color color = color.from_HSL(hue, 100, 100);
 
     void simulate(float deltaTime)
     {
